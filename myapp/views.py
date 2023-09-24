@@ -89,5 +89,16 @@ def execute_raw_query(sql, parameters=None):
 
 def migrate(request):
     import django.core.management
+    from datetime import datetime
+
+    out_str = ""
+
+    out_str += str(datetime.now()) + " running migrate\n"
     django.core.management.execute_from_command_line(['manage.py', 'migrate'])
-    django.core.management.execute_from_command_line(['manage.py', 'collectstatic'])
+    out_str += str(datetime.now()) + " migrate finished\n"
+
+    out_str += str(datetime.now()) + " running collectstatic\n"
+    django.core.management.execute_from_command_line(['manage.py', 'collectstatic', '--noinput'])
+    out_str += str(datetime.now()) + " collectstatic finished\n"
+
+    return HttpResponse(out_str)
