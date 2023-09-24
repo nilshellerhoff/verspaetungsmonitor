@@ -86,3 +86,7 @@ def execute_raw_query(sql, parameters=None):
             results.append(dict(zip(columns, row)))
 
     return results
+
+def migrate():
+    import django.core.management
+    django.core.management.execute_from_command_line(['manage.py', 'migrate'])

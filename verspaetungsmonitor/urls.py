@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('run/', run),
     path('', evaluation),
-    path('data/', data)
+    path('data/', data),
+    path('migrate/', migrate)
 ]
