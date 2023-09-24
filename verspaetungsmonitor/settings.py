@@ -52,6 +52,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'verspaetungsmonitor.urls'
 
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'verspaetungsmonitor.floreen.de'
+]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
