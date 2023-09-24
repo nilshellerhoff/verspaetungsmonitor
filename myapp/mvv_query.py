@@ -20,6 +20,26 @@ def mvv_query(watcher: Watcher):
 
         data = request.json()
 
+        departures = data['departures']
+
+        # iterate through departures and remove duplicates due to line splitting (S1 Freising/Flughafen)
+        for idx, d in enumerate(departures):
+            matching = [
+                i for i,p in enumerate(departures[:idx]) if
+                p['line']['number'] == d['line']['number'] and
+                p['line']['name'] == d['line']['name'] and
+                p['station']['name'] == d['station']['name'] and
+                p['track'] == d['track'] and
+                p['departurePlanned'] == d['departurePlanned'] and
+                p['departureLive'] == d['departureLive']
+            ]
+
+            if len(matching) > 0:
+                i = matching[0]
+                departures[i]['line']['direction'] += " / " + d['line']['direction']
+                departures.pop(idx)
+
+
         for departure in data['departures']:
             # only departures with track number (-> no SEV)
             if not departure['track']:
