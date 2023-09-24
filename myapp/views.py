@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -76,8 +77,19 @@ GROUP BY hour"""
 
 
 def execute_raw_query(sql, parameters=None):
+
+    # sqlite apparently only supports lists as parameters, at least some versoins
+    # so we construct a list of parameter values in the order they appear in the query
+    values_list = []
+    parameter_keys_regex = '(' + '|'.join(parameters.keys()) + ')'
+    pattern = re.compile(r'%\(' + parameter_keys_regex + '\)s')
+    for parameter in re.findall(pattern, sql):
+        values_list.append(parameters[parameter])
+
+    sql = re.sub(pattern, '%s', sql)
+
     with connection.cursor() as cursor:
-        cursor.execute(sql, parameters)
+        cursor.execute(sql, values_list)
 
         # construct a dict of results
         columns = [c[0] for c in cursor.description]
