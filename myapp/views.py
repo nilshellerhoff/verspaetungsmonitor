@@ -90,3 +90,4 @@ def execute_raw_query(sql, parameters=None):
 def migrate(request):
     import django.core.management
     django.core.management.execute_from_command_line(['manage.py', 'migrate'])
+    django.core.management.execute_from_command_line(['manage.py', 'collectstatic'])
