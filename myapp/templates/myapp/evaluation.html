@@ -38,6 +38,11 @@
                       :disabled="!selectedLine"
                       multiple
               />
+              <v-select
+                  v-model="selectedAggregationPeriod"
+                  label="aggregation period"
+                  :items="selectableAggregationPeriods"
+                  />
               <v-btn color="secondary" @click="loadPlotlyPlot">Go</v-btn>
 </span>
     </div>
@@ -60,7 +65,8 @@
                 selectedStation: null,
                 selectedLine: null,
                 selectedDirection: null,
-                plotData: null,
+                selectedAggregationPeriod: null,
+                selectableAggregationPeriods: ['Hour', 'Weekday', 'Weekday+Hour']
             };
         },
         computed: {
@@ -74,7 +80,8 @@
                 const params = {
                     station: this.selectedStation,
                     line: this.selectedLine,
-                    direction: this.selectedDirection
+                    direction: this.selectedDirection,
+                    period: this.selectedAggregationPeriod,
                 }
                 queryString = new URLSearchParams(params).toString();
                 console.log("fetching /data?" + queryString)

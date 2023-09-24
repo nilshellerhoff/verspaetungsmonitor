@@ -51,10 +51,18 @@ def data(request):
     station = request.GET.get('station', 'Heimstetten')
     line = request.GET.get('line', 'S2')
     directions = request.GET.get('direction', 'Petershausen').split(',')
+    period = request.GET.get('period', 'Hour')
 
-    query = """
+    if period == 'Weekday':
+        format_str = '%%w'
+    elif period == 'Hour':
+        format_str = '%%H'
+    else:
+        format_str = '%%w - %%H'
+
+    query = f"""
 SELECT
-    strftime('%%H', d.planned) as hour,
+    strftime('{format_str}', d.planned) as hour,
     count(d.planned) as num_departures_planned,
     count(d.actual) as num_departures_actual,
     avg((julianday(d.actual) - julianday(d.planned)) * 24 * 60) as delay_mean
@@ -70,7 +78,7 @@ GROUP BY hour"""
     results = execute_raw_query(query, {
         'station_name': station,
         'line_number': line,
-        'line_directions': directions
+        'line_directions': directions,
     })
 
     return HttpResponse(json.dumps(results, indent=4))
