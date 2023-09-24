@@ -50,7 +50,7 @@ def evaluation(request):
 def data(request):
     station = request.GET.get('station', 'Heimstetten')
     line = request.GET.get('line', 'S2')
-    direction = request.GET.get('direction', 'Petershausen')
+    directions = request.GET.get('direction', 'Petershausen').split(',')
 
     query = """
 SELECT
@@ -63,30 +63,55 @@ INNER JOIN main.myapp_line l ON d.line_id = l.id
 INNER JOIN main.myapp_station s ON s.id = d.station_id
 WHERE s.name = %(station_name)s
 AND l.number = %(line_number)s
-AND l.direction = %(line_direction)s
+AND l.direction IN %(line_directions)s
 --AND (d.canceled OR datetime(d.actual) < datetime('now'))
 GROUP BY hour"""
 
     results = execute_raw_query(query, {
         'station_name': station,
         'line_number': line,
-        'line_direction': direction,
+        'line_directions': directions
     })
 
     return HttpResponse(json.dumps(results, indent=4))
 
 
 def execute_raw_query(sql, parameters=None):
+    # transform parameters if needed
+    # lists
+    # for key, param in parameters.items():
+    #     if isinstance(param, list):
+    #         if isinstance(p[0], str):
+    #             entries = [f"'{p}'" for p in param]
+    #         else:
+    #             entries = [f"{p}" for p in param]
+    #         param = "(" + ",".join(entries) + ")"
 
     # sqlite apparently only supports lists as parameters, at least some versoins
     # so we construct a list of parameter values in the order they appear in the query
     values_list = []
     parameter_keys_regex = '(' + '|'.join(parameters.keys()) + ')'
     pattern = re.compile(r'%\(' + parameter_keys_regex + '\)s')
-    for parameter in re.findall(pattern, sql):
-        values_list.append(parameters[parameter])
 
-    sql = re.sub(pattern, '%s', sql)
+    # offset to compensate for replacing with strings of varying length
+    offset = 0
+
+    for match in re.finditer(pattern, sql):
+        param = parameters[match.group(1)]
+        start_idx = match.start() + offset
+        end_idx = match.end() + offset
+
+        if isinstance(param, list):
+            # lists are handled separately
+            values_list.extend(param)
+            placeholders = ",".join(["%s" for _ in param])
+            replace_str = "(" + placeholders + ")"
+        else:
+            values_list.append(param)
+            replace_str = "%s"
+
+        sql = sql[:start_idx] + replace_str + sql[end_idx:]
+        offset += len(replace_str) - (end_idx - start_idx)
 
     with connection.cursor() as cursor:
         cursor.execute(sql, values_list)
