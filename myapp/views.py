@@ -64,7 +64,7 @@ INNER JOIN main.myapp_station s ON s.id = d.station_id
 WHERE s.name = %(station_name)s
 AND l.number = %(line_number)s
 AND l.direction = %(line_direction)s
-AND (d.canceled OR datetime(d.actual) < datetime('now'))
+--AND (d.canceled OR datetime(d.actual) < datetime('now'))
 GROUP BY hour"""
 
     results = execute_raw_query(query, {
