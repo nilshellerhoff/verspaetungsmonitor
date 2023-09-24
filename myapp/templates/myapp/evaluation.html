@@ -21,12 +21,14 @@
               <v-select
                       v-model="selectedStation"
                       label="Station"
+                      @update:modelValue="selectedLine = null; selectedDirection = null"
                       :items="selectableStations"
               />
               <v-select
                       v-model="selectedLine"
                       label="Line"
                       :items="selectableLines"
+                      @update:modelValue="selectedDirection = null"
                       :disabled="!selectedStation"
               />
               <v-select
