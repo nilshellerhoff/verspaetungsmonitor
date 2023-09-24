@@ -35,8 +35,8 @@ def evaluation(request):
         # lines = Line.objects.filter(station__name=station['name']).values('number').distinct()
         for line_number in [l['line__number'] for l in line_numbers]:
             data[station_name][line_number] = []
-            line_directions = Departure.objects.filter(station__name=station_name, line__number=line_number).values('line__number').distinct()
-            for direction in directions:
+            line_directions = Departure.objects.filter(station__name=station_name, line__number=line_number).values('line__direction').distinct()
+            for direction in [l['line__direction'] for l in line_directions]:
                 data[station_name][line_number].append(direction)
 
 

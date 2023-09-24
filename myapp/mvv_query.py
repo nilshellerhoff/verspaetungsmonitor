@@ -14,8 +14,9 @@ def mvv_query(watcher: Watcher):
 
         request = requests.get(url)
         if request.status_code != 200:
-            print(f"status {request.status_code} for request {url}")
-            return False
+            try: api_error = request.json()['error']
+            except: api_error = 'no api error'
+            raise Exception(f'API Error ({request.status_code}): {api_error}')
 
         data = request.json()
 

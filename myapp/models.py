@@ -4,7 +4,7 @@ from django.db.models import *
 class Watcher(Model):
     provider = CharField(max_length=255)
     name = CharField(max_length=255)
-    url = URLField()
+    url = URLField(max_length=4096)
 
     def __str__(self):
         return self.provider + ' - ' + self.name
@@ -17,7 +17,7 @@ class ApiRun(Model):
     error = CharField(max_length=2048)
 
     def __str__(self):
-        return str(self.timestamp) + ': ' + self.watcher.url
+        return str(self.timestamp) + ': ' + str(self.watcher)
 
 
 class Station(Model):
