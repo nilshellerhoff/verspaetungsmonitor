@@ -63,14 +63,14 @@ def mvv_query(watcher: Watcher):
 
         ApiRun.objects.create(
             watcher=watcher,
-            timestamp=runtime,
+            timestamp=request_time,
             status='success'
         ).save()
 
     except Exception as e:
         ApiRun.objects.create(
             watcher=watcher,
-            timestamp=runtime,
+            timestamp=request_time,
             status='failed',
             error=str(e)
         ).save()
