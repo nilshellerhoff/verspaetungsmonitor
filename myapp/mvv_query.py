@@ -36,7 +36,8 @@ def mvv_query(watcher: Watcher):
 
             if len(matching) > 0:
                 i = matching[0]
-                departures[i]['line']['direction'] += " / " + d['line']['direction']
+                if departures[i]['line']['direction'] != d['line']['direction']:
+                    departures[i]['line']['direction'] += " / " + d['line']['direction']
                 departures.pop(idx)
 
 
