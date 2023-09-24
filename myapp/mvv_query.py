@@ -38,16 +38,17 @@ def mvv_query(watcher: Watcher):
             if departure['departureLive'] == 'Halt entfällt':
                 canceled = True
                 actual_dt = None
-            elif actual_dt < request_time:
-                # disregard departues which have already happened, but are still returned from response
-                continue
             else:
-                canceled = False
                 actual_dt = datetime.strptime(departure['departureDate'] + ' ' + departure['departureLive'], datetime_format)
+                canceled = False
 
-                # if actual is more than 12 hours before planned, we assume there to be a dateshift
-                if (actual_dt - planned_dt).total_seconds() < -1 * 12 * 60 * 60:
-                    actual_dt = actual_dt + timedelta(days=1)
+                if actual_dt < request_time:
+                    # disregard departues which have already happened, but are still returned from response
+                    continue
+                else:
+                    # if actual is more than 12 hours before planned, we assume there to be a dateshift
+                    if (actual_dt - planned_dt).total_seconds() < -1 * 12 * 60 * 60:
+                        actual_dt = actual_dt + timedelta(days=1)
 
             # check if a departure with matching station, line type, number and direction and planned time exists
             Departure.objects.update_or_create(
