@@ -93,12 +93,16 @@ def migrate(request):
 
     out_str = ""
 
-    out_str += str(datetime.now()) + " running migrate\n"
+    out_str += str(datetime.now()) + " running migrate<br>"
     django.core.management.execute_from_command_line(['manage.py', 'migrate'])
-    out_str += str(datetime.now()) + " migrate finished\n"
+    out_str += str(datetime.now()) + " migrate finished<br>"
 
-    out_str += str(datetime.now()) + " running collectstatic\n"
+    out_str += str(datetime.now()) + " running collectstatic<br>"
     django.core.management.execute_from_command_line(['manage.py', 'collectstatic', '--noinput'])
-    out_str += str(datetime.now()) + " collectstatic finished\n"
+    out_str += str(datetime.now()) + " collectstatic finished<br>"
+
+    out_str += str(datetime.now()) + " running createsuperuser<br>"
+    django.core.management.execute_from_command_line(['manage.py', 'createsuperuser', '--noinput'])
+    out_str += str(datetime.now()) + " createsuperuser finished<br>"
 
     return HttpResponse(out_str)
