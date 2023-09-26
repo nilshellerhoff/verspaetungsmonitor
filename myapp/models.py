@@ -44,6 +44,8 @@ class Departure(Model):
     actual = DateTimeField(max_length=255, null=True)
     in_time = BooleanField()
     canceled = BooleanField()
+    last_update = DateTimeField()
+    watcher = ForeignKey(Watcher, on_delete=PROTECT, null=True)
 
     def __str__(self):
         return str(self.planned) + ' - ' + self.station.name + ' - ' + self.line.number + ' ' + self.line.direction

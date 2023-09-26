@@ -80,7 +80,9 @@ def mvv_query(watcher: Watcher):
                 defaults={
                     'actual': actual_dt,
                     'in_time': departure['inTime'],
-                    'canceled': canceled
+                    'canceled': canceled,
+                    'last_update': request_time,
+                    'watcher': watcher
                 }
             )
 
