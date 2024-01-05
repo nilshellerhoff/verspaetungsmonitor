@@ -1,23 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link
-            href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
-            rel="stylesheet"
-    />
-    <link
-            href="https://cdn.jsdelivr.net/npm/vuetify@3.0.5/dist/vuetify.min.css"
-            rel="stylesheet"
-    />
+  <link
+          href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
+          rel="stylesheet"
+  />
+  <link
+          href="https://cdn.jsdelivr.net/npm/vuetify@3.4.9/dist/vuetify.min.css"
+          rel="stylesheet"
+  />
 </head>
 <body>
 <div id="app"></div>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify@3.0.5/dist/vuetify.min.js"></script>
-<script src="https://cdn.plot.ly/plotly-2.26.0.min.js" charset="utf-8"></script>
-<script type="text/x-template" id="app-template">
-    <div style="position: absolute; top: 50px; left: 50px; width: 300px; display: inline-block">
+<script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.9/dist/vuetify.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.26.0.min.js"
+        charset="utf-8"></script>
+<script type="text/x-template"
+        id="app-template">
+  <div style="position: absolute; top: 50px; left: 50px; width: 300px; display: inline-block">
           <span style="height: 40px">
+              <v-text-field
+                      style="position: relative"
+                      v-model="fromDateForDisplay"
+                      name="from"
+                      @click="fromDatePickerOpen = true"
+                      label="from"
+                      readonly
+              ></v-text-field>
+              <v-date-picker
+                      format="yyyy-mm-dd"
+                      v-model="fromDateForDatePicker"
+                      v-if="fromDatePickerOpen"
+                      style="position: absolute; z-index: 100"
+                      @update:modelValue="selectFromDate"
+              >
+                <template #actions>
+                  <v-btn text
+                         @click="fromDatePickerOpen = false">Cancel</v-btn>
+                </template>
+              </v-date-picker>
+
+              <v-text-field
+                      style="position: relative"
+                      v-model="toDateForDisplay"
+                      name="to"
+                      @click="toDatePickerOpen = true"
+                      label="to"
+                      readonly
+              ></v-text-field>
+              <v-date-picker
+                      v-model="toDateForDatePicker"
+                      v-if="toDatePickerOpen"
+                      style="position: absolute; z-index: 100"
+                      @update:modelValue="selectToDate"
+              >
+                <template #actions>
+                  <v-btn text
+                         @click="toDatePickerOpen = false">Cancel</v-btn>
+                </template>
+              </v-date-picker>
+
               <v-select
                       v-model="selectedStation"
                       label="Station"
@@ -39,75 +82,106 @@
                       multiple
               />
               <v-select
-                  v-model="selectedAggregationPeriod"
-                  label="aggregation period"
-                  :items="selectableAggregationPeriods"
-                  />
-              <v-btn color="secondary" @click="loadPlotlyPlot">Go</v-btn>
+                      v-model="selectedAggregationPeriod"
+                      label="aggregation period"
+                      :items="selectableAggregationPeriods"
+              />
+              <v-btn color="secondary"
+                     @click="loadPlotlyPlot">Go</v-btn>
 </span>
-    </div>
-    <div id="plotDepartures"
-         style="position: absolute; top: 50px; left: 400px; width: 700px; height: 400px; display: inline-block"></div>
-    <div id="plotDelay"
-         style="position: absolute; top: 50px; left: 1100px; width: 700px; height: 400px; display: inline-block"></div>
+  </div>
+  <div id="plotDepartures"
+       style="position: absolute; top: 50px; left: 400px; width: 700px; height: 400px; display: inline-block"></div>
+  <div id="plotDelay"
+       style="position: absolute; top: 50px; left: 1100px; width: 700px; height: 400px; display: inline-block"></div>
 </script>
 <script>
-    const {createApp} = Vue;
-    const {createVuetify} = Vuetify;
+  const {createApp} = Vue;
+  const {createVuetify} = Vuetify;
 
-    const vuetify = createVuetify();
+  const vuetify = createVuetify();
 
-    const app = createApp({
-        template: "#app-template",
-        data() {
-            return {
-                jinja_data: {{ data | safe }},
-                selectedStation: null,
-                selectedLine: null,
-                selectedDirection: null,
-                selectedAggregationPeriod: null,
-                selectableAggregationPeriods: ['Hour', 'Weekday', 'Weekday+Hour']
-            };
-        },
-        computed: {
-            selectableStations() { return Object.keys(this.jinja_data ?? {}).sort()},
-            selectableLines() { return Object.keys(this.jinja_data?.[this.selectedStation] ?? {}).sort()},
-            selectableDirections() { return this.jinja_data?.[this.selectedStation]?.[this.selectedLine]?.sort() ?? []},
-        },
-        methods: {
-            loadPlotlyPlot() {
-                console.log("Creating Plotly")
-                const params = {
-                    station: this.selectedStation,
-                    line: this.selectedLine,
-                    direction: this.selectedDirection,
-                    period: this.selectedAggregationPeriod,
-                }
-                queryString = new URLSearchParams(params).toString();
-                console.log("fetching /data?" + queryString)
-                fetch('/data?' + queryString).then(r => r.json()).then(r => {
-                    const x = r.map(it => it.hour)
-
-                    // number of departures
-                    const numberDeparturesPlanned = r.map(it => it.num_departures_planned)
-                    const numberDeparturesActual = r.map(it => it.num_departures_actual)
-                    const tracePlanned = {x: x, y: numberDeparturesPlanned, name: 'Number of planned departures'}
-                    const traceActual = {x: x, y: numberDeparturesActual, name: 'Number of actual departures'}
-                    Plotly.newPlot('plotDepartures', [tracePlanned, traceActual], {title: 'Number of departures'})
-
-                    // average delay
-                    const avgDelay = r.map(it => it.delay_mean)
-                    const traceDelay = {x: x, y: avgDelay, name: 'average delay'}
-                    Plotly.newPlot('plotDelay', [traceDelay], {title: 'Delay', showlegend: true})
-                })
-
-            },
+  const app = createApp({
+    template: "#app-template",
+    data() {
+      return {
+        jinja_data: {{ data | safe }},
+        selectedStation: null,
+        selectedLine: null,
+        selectedDirection: null,
+        selectedAggregationPeriod: null,
+        selectableAggregationPeriods: ['Hour', 'Weekday', 'Weekday+Hour'],
+        // from datepicker
+        fromDatePickerOpen: false,
+        fromDateForDatePicker: null,
+        fromDateDate: null,
+        fromDateForDisplay: '',
+        // to datepicker
+        toDatePickerOpen: false,
+        toDateForDatePicker: null,
+        toDateDate: null,
+        toDateForDisplay: '',
+      };
+    },
+    computed: {
+      selectableStations() {
+        return Object.keys(this.jinja_data ?? {}).sort()
+      },
+      selectableLines() {
+        return Object.keys(this.jinja_data?.[this.selectedStation] ?? {}).sort()
+      },
+      selectableDirections() {
+        return this.jinja_data?.[this.selectedStation]?.[this.selectedLine]?.sort() ?? []
+      },
+    },
+    methods: {
+      selectFromDate() {
+        this.fromDatePickerOpen = false;
+        this.fromDateDate = new Date(this.fromDateForDatePicker);
+        this.fromDateDate = new Date(this.fromDateDate.getTime() - this.fromDateDate.getTimezoneOffset() * 60 * 1000);
+        this.fromDateForDisplay = this.fromDateDate.toISOString().split('T')[0];
+      },
+      selectToDate() {
+        this.toDatePickerOpen = false;
+        this.toDateDate = new Date(this.toDateForDatePicker);
+        this.toDateDate = new Date(this.toDateDate.getTime() - this.toDateDate.getTimezoneOffset() * 60 * 1000);
+        this.toDateForDisplay = this.toDateDate.toISOString().split('T')[0];
+      },
+      loadPlotlyPlot() {
+        console.log("Creating Plotly")
+        const params = {
+          station: this.selectedStation,
+          line: this.selectedLine,
+          direction: this.selectedDirection,
+          period: this.selectedAggregationPeriod,
+          from: this.fromDateForDisplay,
+          to: this.toDateForDisplay,
         }
+        let queryString = new URLSearchParams(params).toString();
+        console.log("fetching /data?" + queryString)
+        fetch('/data?' + queryString).then(r => r.json()).then(r => {
+          const x = r.map(it => it.hour)
 
-    });
+          // number of departures
+          const numberDeparturesPlanned = r.map(it => it.num_departures_planned)
+          const numberDeparturesActual = r.map(it => it.num_departures_actual)
+          const tracePlanned = {x: x, y: numberDeparturesPlanned, name: 'Number of planned departures'}
+          const traceActual = {x: x, y: numberDeparturesActual, name: 'Number of actual departures'}
+          Plotly.newPlot('plotDepartures', [tracePlanned, traceActual], {title: 'Number of departures'})
 
-    app.use(vuetify);
-    app.mount("#app");
+          // average delay
+          const avgDelay = r.map(it => it.delay_mean)
+          const traceDelay = {x: x, y: avgDelay, name: 'average delay'}
+          Plotly.newPlot('plotDelay', [traceDelay], {title: 'Delay', showlegend: true})
+        })
+
+      },
+    }
+
+  });
+
+  app.use(vuetify);
+  app.mount("#app");
 </script>
 </body>
 </html>

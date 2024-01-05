@@ -48,10 +48,17 @@ def evaluation(request):
     return render(request, 'myapp/evaluation.html', {'data': json.dumps(data)})
 
 def data(request):
+    from_ = request.GET.get('from')
+    to = request.GET.get('to')
     station = request.GET.get('station', 'Heimstetten')
     line = request.GET.get('line', 'S2')
     directions = request.GET.get('direction', 'Petershausen').split(',')
     period = request.GET.get('period', 'Hour')
+
+    to_end_of_day = to + ' 23:59:59' if from_ else None
+
+    from_condition = f"""AND datetime(d.planned) >= %(from)s"""
+    to_condition = f"""AND datetime(d.planned) <= %(to)s"""
 
     if period == 'Weekday':
         format_str = '%%w'
@@ -73,12 +80,16 @@ WHERE s.name = %(station_name)s
 AND l.number = %(line_number)s
 AND l.direction IN %(line_directions)s
 --AND (d.canceled OR datetime(d.actual) < datetime('now'))
+{ from_condition if from_ else '' }
+{ to_condition if to else '' }
 GROUP BY hour"""
 
     results = execute_raw_query(query, {
         'station_name': station,
         'line_number': line,
         'line_directions': directions,
+        'from': from_,
+        'to': to_end_of_day
     })
 
     return HttpResponse(json.dumps(results, indent=4))
